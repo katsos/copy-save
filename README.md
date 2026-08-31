@@ -1,11 +1,11 @@
 # Copy Save
 
-**Copy an image. Press ⌥⌘V. It's a PNG on your Desktop.**
+**Copy an image. Click the menu bar icon. It's a PNG on your Desktop.**
 
-One keystroke, from any app, with no window to focus first. Every other way of
+One click, from any app, with no window to open or focus. Every other way of
 doing this on macOS costs three to six steps.
 
-<!-- Add a demo GIF here: copy a screenshot, press ⌥⌘V, file appears. -->
+<!-- Add a demo GIF here: copy a screenshot, click the icon, file appears. -->
 
 | Getting a copied image onto disk | Steps |
 | --- | --- |
@@ -16,12 +16,12 @@ doing this on macOS costs three to six steps.
 
 No Save dialog. No "where do you want this?". No format picker. No
 preferences, no accounts, no login item to configure. It sits in the menu bar
-as a single icon so you can see it's armed — about 200 lines of Swift and zero
+as a single icon so you can see it's ready — about 195 lines of Swift and zero
 dependencies.
 
-The global hotkey uses Carbon's `RegisterEventHotKey`, which means **no
-Accessibility or Input Monitoring permission** — no prompt, nothing to grant,
-no keystroke logging of any kind.
+No global hotkey, which means **no Accessibility or Input Monitoring
+permission** — no prompt, nothing to grant, and nothing in Copy Save that can
+observe a keystroke you didn't aim at it.
 
 ## Install
 
@@ -44,12 +44,14 @@ keep it in the Dock, which stores the resolved path and survives rebuilds.
 
 ## Use
 
-Copy an image anywhere — a screenshot, a browser, Slack, Figma — then press
-**⌥⌘V**. That's it; the menu bar icon flashes a checkmark and the PNG is on
-your Desktop. It works whether or not the Copy Save window is open.
+Copy an image anywhere — a screenshot, a browser, Slack, Figma — then click the
+Copy Save icon in the menu bar. The icon flashes a checkmark and the PNG is on
+your Desktop.
 
-The menu bar icon also gives you Save Clipboard Image, Show Window and Quit.
-The window is optional: it shows what was saved last, accepts ⌘V, and takes
+Right-click or control-click the icon for the menu: Save Clipboard Image, Show
+Window, Quit.
+
+The window is optional. It shows what was saved last, accepts ⌘V, and takes
 images dragged onto it.
 
 Files land on the Desktop as `Clipboard 2026-08-31 at 12.42.21.783.png`. The
@@ -59,10 +61,8 @@ millisecond stamp means nothing is ever overwritten.
 
 - The app is signed ad-hoc, so the first launch needs right-click → Open.
 - macOS asks once for permission to write to the Desktop folder.
-- Copy Save lives in the menu bar and has no Dock icon. Quit it from the menu
-  bar icon, or press ⌘Q with its window focused.
-- ⌥⌘V is Finder's "Move Item Here", so inside Finder after copying a *file*
-  that shortcut now belongs to Copy Save.
+- Copy Save lives in the menu bar and has no Dock icon. Quit it from the icon's
+  menu, or press ⌘Q with its window focused.
 - Everything is re-encoded to PNG, including pasted JPEGs.
 
 ## License

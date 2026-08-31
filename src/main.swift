@@ -1,5 +1,4 @@
 import AppKit
-import Carbon.HIToolbox
 
 final class DropView: NSView {
     var onImage: ((NSImage) -> Void)?
@@ -43,11 +42,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var dropView: DropView!
     private let status = NSTextField(labelWithString: "")
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-    private var hotKey: EventHotKeyRef?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         buildStatusItem()
-        registerHotKey()
 
         window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 420, height: 260),
@@ -65,7 +62,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         status.lineBreakMode = .byWordWrapping
         status.maximumNumberOfLines = 4
         status.translatesAutoresizingMaskIntoConstraints = false
-        report("Press ⌥⌘V anywhere to save a copied image",
+        report("Click the menu bar icon to save a copied image",
                hint: "…or press ⌘V here, or drag an image onto this window.")
 
         dropView.addSubview(status)
@@ -86,7 +83,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func paste(_ sender: Any?) {
         if !dropView.readImage(from: .general) {
-            report("No image on the clipboard.", hint: "Copy an image, then press ⌥⌘V.")
+            report("No image on the clipboard.", hint: "Copy an image, then click the menu bar icon.")
             flashStatusItem(Self.failedIcon)
         }
     }
@@ -105,7 +102,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let url = desktop.appendingPathComponent("Clipboard \(Self.formatter.string(from: Date())).png")
         do {
             try png.write(to: url)
-            report("Saved \(url.lastPathComponent)", hint: "Copy another image and press ⌥⌘V again.")
+            report("Saved \(url.lastPathComponent)", hint: "Copy another image and click the menu bar icon again.")
             flashStatusItem(Self.savedIcon)
         } catch {
             report("Save failed.", hint: error.localizedDescription)
@@ -150,42 +147,42 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private static let savedIcon = icon("checkmark.circle.fill")
     private static let failedIcon = icon("exclamationmark.triangle.fill")
 
+    /// Left-click saves straight away; right- or control-click opens the menu.
     private func buildStatusItem() {
-        statusItem.button?.image = Self.idleIcon
+        guard let button = statusItem.button else { return }
+        button.image = Self.idleIcon
+        button.toolTip = "Copy Save — click to save the clipboard image"
+        button.target = self
+        button.action = #selector(statusItemClicked)
+        button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+    }
+
+    @objc private func statusItemClicked() {
+        let event = NSApp.currentEvent
+        let wantsMenu = event?.type == .rightMouseUp
+            || event?.modifierFlags.contains(.control) == true
+        guard wantsMenu else { return paste(nil) }
+
+        statusItem.menu = menu
+        statusItem.button?.performClick(nil)
+        statusItem.menu = nil
+    }
+
+    private lazy var menu: NSMenu = {
         let menu = NSMenu()
-        menu.addItem(withTitle: "Save Clipboard Image  ⌥⌘V", action: #selector(paste(_:)), keyEquivalent: "")
+        menu.addItem(withTitle: "Save Clipboard Image", action: #selector(paste(_:)), keyEquivalent: "")
         menu.addItem(withTitle: "Show Window", action: #selector(showWindow), keyEquivalent: "")
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quit Copy Save", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         menu.items.forEach { $0.target = $0.action == #selector(NSApplication.terminate(_:)) ? NSApp : self }
-        statusItem.menu = menu
-    }
+        return menu
+    }()
 
-    /// Shows the outcome of a hotkey save when the window is closed or hidden.
+    /// Shows the outcome of a save when the window is closed or hidden.
     private func flashStatusItem(_ image: NSImage?) {
         statusItem.button?.image = image
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
             self?.statusItem.button?.image = Self.idleIcon
-        }
-    }
-
-    // MARK: - Global hotkey
-
-    /// ⌥⌘V, via Carbon's RegisterEventHotKey — the only global hotkey API that
-    /// needs no Accessibility permission.
-    private func registerHotKey() {
-        var spec = EventTypeSpec(eventClass: OSType(kEventClassKeyboard),
-                                 eventKind: UInt32(kEventHotKeyPressed))
-        InstallEventHandler(GetApplicationEventTarget(), { _, _, _ in
-            (NSApp.delegate as? AppDelegate)?.paste(nil)
-            return noErr
-        }, 1, &spec, nil, nil)
-
-        let id = EventHotKeyID(signature: OSType(0x43505356), id: 1)  // 'CPSV'
-        let err = RegisterEventHotKey(UInt32(kVK_ANSI_V), UInt32(cmdKey | optionKey),
-                                      id, GetApplicationEventTarget(), 0, &hotKey)
-        if err != noErr {
-            FileHandle.standardError.write("RegisterEventHotKey failed: \(err)\n".data(using: .utf8)!)
         }
     }
 }
