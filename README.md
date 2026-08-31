@@ -1,16 +1,22 @@
 # Copy Save
 
-Press ⌘V. The image on your clipboard becomes a PNG on your Desktop.
+**Copy an image. Press ⌘V. It's a PNG on your Desktop.**
 
-That's the whole app. No Save dialog, no "where do you want this?", no format
-picker, no menu bar icon, no preferences. One window, one keystroke, one file.
-Roughly 130 lines of Swift, zero dependencies.
+Every other way of doing this on macOS costs four to six steps. Copy Save costs
+one keystroke.
 
-## Why
+<!-- Add a demo GIF here: copy a screenshot, press ⌘V, file appears. -->
 
-macOS makes you open Preview, paste, hit ⌘S, pick a folder, pick a format, and
-confirm — six steps to get a screenshot out of a chat window and onto disk.
-Copy Save is that flow collapsed into ⌘V.
+| Getting a copied image onto disk | Steps |
+| --- | --- |
+| Preview: File → New from Clipboard, ⌘S, name it, pick a folder, pick a format, Save | 6 |
+| Screenshot app: re-take the shot you already have, wait for the thumbnail, drag it out | 3–4 |
+| Paste into Finder (macOS 14+): ⌘V into a window you first have to open and focus | 2–3 |
+| **Copy Save** | **1** |
+
+No Save dialog. No "where do you want this?". No format picker. No
+preferences, no accounts, no menu bar clutter. One window, one keystroke, one
+file — about 140 lines of Swift and zero dependencies.
 
 ## Install
 
@@ -21,7 +27,7 @@ Line Tools (`xcode-select --install`).
 git clone https://github.com/katsos/copy-save.git && cd copy-save && ./build.sh
 ```
 
-This produces an ad-hoc signed `CopySave.app` next to the script. Move it to
+That produces an ad-hoc signed `CopySave.app` next to the script. Move it to
 `/Applications`, or symlink it so rebuilds are picked up automatically:
 
 ```sh
@@ -33,13 +39,14 @@ keep it in the Dock, which stores the resolved path and survives rebuilds.
 
 ## Use
 
-1. Copy an image anywhere — screenshot, browser, Slack, Figma.
-2. Focus the Copy Save window.
-3. Press ⌘V.
+Copy an image anywhere — a screenshot, a browser, Slack, Figma — then press ⌘V
+in the Copy Save window. Dragging an image, or an image file, onto the window
+does the same thing.
 
-Dragging an image, or an image file, onto the window does the same thing.
+Keep the window open on a second display or a corner of the screen and it is
+genuinely a single keystroke away, all day.
 
-Files land on the Desktop as `Clipboard 2026-08-27 at 19.24.11.084.png`. The
+Files land on the Desktop as `Clipboard 2026-08-31 at 12.42.21.783.png`. The
 millisecond stamp means nothing is ever overwritten.
 
 ## Notes
@@ -47,6 +54,8 @@ millisecond stamp means nothing is ever overwritten.
 - The app is signed ad-hoc, so the first launch needs right-click → Open.
 - macOS asks once for permission to write to the Desktop folder.
 - Everything is re-encoded to PNG, including pasted JPEGs.
+- The window has to be focused for ⌘V to reach it. A system-wide hotkey is the
+  obvious next step; see the issues.
 
 ## License
 

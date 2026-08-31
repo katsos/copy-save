@@ -26,7 +26,7 @@ final class DropView: NSView {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var window: NSWindow!
     private var dropView: DropView!
-    private let status = NSTextField(labelWithString: "Press ⌘V to paste an image,\nor drag one here.")
+    private let status = NSTextField(labelWithString: "")
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         buildMenu()
@@ -43,11 +43,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         dropView = DropView(frame: .zero)
         dropView.onImage = { [weak self] image in self?.save(image) }
 
-        status.alignment = .center
-        status.font = .systemFont(ofSize: 15, weight: .medium)
         status.lineBreakMode = .byWordWrapping
         status.maximumNumberOfLines = 4
         status.translatesAutoresizingMaskIntoConstraints = false
+        report("Press ⌘V to paste an image", hint: "…or drag one onto this window.")
 
         dropView.addSubview(status)
         NSLayoutConstraint.activate([
@@ -65,7 +64,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func paste(_ sender: Any?) {
         if !dropView.readImage(from: .general) {
-            report("No image on the clipboard.\nCopy an image, then press ⌘V.")
+            report("No image on the clipboard.", hint: "Copy an image, then press ⌘V.")
         }
     }
 
@@ -75,16 +74,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let tiff = image.tiffRepresentation,
               let rep = NSBitmapImageRep(data: tiff),
               let png = rep.representation(using: .png, properties: [:]) else {
-            report("Could not encode that image.")
+            report("Could not encode that image.", hint: "")
             return
         }
 
         let url = desktop.appendingPathComponent("Clipboard \(Self.formatter.string(from: Date())).png")
         do {
             try png.write(to: url)
-            report("Saved \(url.lastPathComponent)\nCopy another image and press ⌘V again.")
+            report("Saved \(url.lastPathComponent)", hint: "Copy another image and press ⌘V again.")
         } catch {
-            report("Save failed.\n\(error.localizedDescription)")
+            report("Save failed.", hint: error.localizedDescription)
         }
     }
 
@@ -94,8 +93,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return f
     }()
 
-    private func report(_ message: String) {
-        status.stringValue = message
+    /// Two-tier centered text: message in medium 15pt, hint in secondary 11pt.
+    private func report(_ message: String, hint: String) {
+        let style = NSMutableParagraphStyle()
+        style.alignment = .center
+        style.lineSpacing = 4
+        let text = NSMutableAttributedString(string: message + (hint.isEmpty ? "" : "\n" + hint))
+        text.addAttributes(
+            [.font: NSFont.systemFont(ofSize: 15, weight: .medium),
+             .foregroundColor: NSColor.labelColor,
+             .paragraphStyle: style],
+            range: NSRange(location: 0, length: text.length))
+        if !hint.isEmpty {
+            text.addAttributes(
+                [.font: NSFont.systemFont(ofSize: 11),
+                 .foregroundColor: NSColor.secondaryLabelColor],
+                range: NSRange(location: (message as NSString).length + 1, length: (hint as NSString).length))
+        }
+        status.attributedStringValue = text
     }
 
     private func buildMenu() {
