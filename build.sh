@@ -5,10 +5,10 @@ cd "$(dirname "$0")"
 
 APP="CopySave.app"
 rm -rf "$APP"
-mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+mkdir -p "$APP/Contents/MacOS"
 
-swiftc -O src/main.swift -o "$APP/Contents/MacOS/CopySave" \
-  -target arm64-apple-macosx13.0
+swiftc src/main.swift -o "$APP/Contents/MacOS/CopySave" \
+  -target "$(uname -m)-apple-macosx13.0"
 
 cat > "$APP/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -28,5 +28,5 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 </plist>
 PLIST
 
-codesign --force --deep --sign - "$APP"
+codesign --force --sign - "$APP"
 echo "Built $(pwd)/$APP"

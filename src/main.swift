@@ -1,16 +1,13 @@
 import AppKit
-import UniformTypeIdentifiers
 
 final class DropView: NSView {
-    var onImage: ((NSImage, String?) -> Void)?
+    var onImage: ((NSImage) -> Void)?
 
     override init(frame: NSRect) {
         super.init(frame: frame)
         registerForDraggedTypes([.fileURL, .tiff, .png])
     }
     required init?(coder: NSCoder) { fatalError() }
-
-    override var acceptsFirstResponder: Bool { true }
 
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation { .copy }
 
@@ -20,40 +17,16 @@ final class DropView: NSView {
 
     @discardableResult
     func readImage(from pb: NSPasteboard) -> Bool {
-        // Prefer file URLs so the original name/format is kept.
-        if let urls = pb.readObjects(forClasses: [NSURL.self], options: nil) as? [URL] {
-            var handled = false
-            for url in urls {
-                guard let type = UTType(filenameExtension: url.pathExtension),
-                      type.conforms(to: .image),
-                      let image = NSImage(contentsOf: url) else { continue }
-                onImage?(image, url.lastPathComponent)
-                handled = true
-            }
-            if handled { return true }
-        }
-        if let image = NSImage(pasteboard: pb) {
-            onImage?(image, nil)
-            return true
-        }
-        return false
-    }
-}
-
-final class StatusLabel: NSTextField {
-    convenience init(text: String) {
-        self.init(labelWithString: text)
-        alignment = .center
-        lineBreakMode = .byTruncatingMiddle
+        guard let image = NSImage(pasteboard: pb) else { return false }
+        onImage?(image)
+        return true
     }
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var window: NSWindow!
     private var dropView: DropView!
-    private let status = StatusLabel(text: "Press ⌘V to paste an image,\nor drag one here.")
-    private let detail = StatusLabel(text: "")
-    private var savedCount = 0
+    private let status = NSTextField(labelWithString: "Press ⌘V to paste an image,\nor drag one here.")
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         buildMenu()
@@ -68,29 +41,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.center()
 
         dropView = DropView(frame: .zero)
-        dropView.onImage = { [weak self] image, name in self?.save(image, suggestedName: name) }
+        dropView.onImage = { [weak self] image in self?.save(image) }
 
+        status.alignment = .center
         status.font = .systemFont(ofSize: 15, weight: .medium)
-        status.maximumNumberOfLines = 3
-        detail.font = .systemFont(ofSize: 11)
-        detail.textColor = .secondaryLabelColor
-        detail.maximumNumberOfLines = 2
+        status.lineBreakMode = .byWordWrapping
+        status.maximumNumberOfLines = 4
+        status.translatesAutoresizingMaskIntoConstraints = false
 
-        let stack = NSStackView(views: [status, detail])
-        stack.orientation = .vertical
-        stack.spacing = 10
-        stack.translatesAutoresizingMaskIntoConstraints = false
-
-        dropView.addSubview(stack)
+        dropView.addSubview(status)
         NSLayoutConstraint.activate([
-            stack.centerXAnchor.constraint(equalTo: dropView.centerXAnchor),
-            stack.centerYAnchor.constraint(equalTo: dropView.centerYAnchor),
-            stack.widthAnchor.constraint(lessThanOrEqualTo: dropView.widthAnchor, constant: -40),
+            status.centerXAnchor.constraint(equalTo: dropView.centerXAnchor),
+            status.centerYAnchor.constraint(equalTo: dropView.centerYAnchor),
+            status.widthAnchor.constraint(lessThanOrEqualTo: dropView.widthAnchor, constant: -40),
         ])
 
         window.contentView = dropView
         window.makeKeyAndOrderFront(nil)
-        window.makeFirstResponder(dropView)
         NSApp.activate(ignoringOtherApps: true)
     }
 
@@ -98,62 +65,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func paste(_ sender: Any?) {
         if !dropView.readImage(from: .general) {
-            report("No image on the clipboard.", detail: "Copy an image, then press ⌘V.")
-            readyForNextPaste()
+            report("No image on the clipboard.\nCopy an image, then press ⌘V.")
         }
     }
 
-    /// Keeps the drop view as first responder so every following ⌘V lands here too.
-    private func readyForNextPaste() {
-        if window.firstResponder !== dropView {
-            window.makeFirstResponder(dropView)
-        }
-    }
-
-    private func save(_ image: NSImage, suggestedName: String?) {
+    private func save(_ image: NSImage) {
         let desktop = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask)[0]
 
         guard let tiff = image.tiffRepresentation,
               let rep = NSBitmapImageRep(data: tiff),
               let png = rep.representation(using: .png, properties: [:]) else {
-            report("Could not encode that image.", detail: nil)
+            report("Could not encode that image.")
             return
         }
 
-        let base = suggestedName.map { ($0 as NSString).deletingPathExtension } ?? "Clipboard"
-        let url = uniqueURL(in: desktop, base: base, ext: "png")
-
+        let url = desktop.appendingPathComponent("Clipboard \(Self.formatter.string(from: Date())).png")
         do {
             try png.write(to: url)
-            savedCount += 1
-            report("Saved \(url.lastPathComponent)",
-                   detail: "\(savedCount) saved this session — copy another image and press ⌘V again.")
+            report("Saved \(url.lastPathComponent)\nCopy another image and press ⌘V again.")
         } catch {
-            report("Save failed.", detail: error.localizedDescription)
+            report("Save failed.\n\(error.localizedDescription)")
         }
-        readyForNextPaste()
-    }
-
-    private func uniqueURL(in dir: URL, base: String, ext: String) -> URL {
-        let stamp = Self.formatter.string(from: Date())
-        var candidate = dir.appendingPathComponent("\(base) \(stamp).\(ext)")
-        var n = 2
-        while FileManager.default.fileExists(atPath: candidate.path) {
-            candidate = dir.appendingPathComponent("\(base) \(stamp)-\(n).\(ext)")
-            n += 1
-        }
-        return candidate
     }
 
     private static let formatter: DateFormatter = {
         let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd 'at' HH.mm.ss"
+        f.dateFormat = "yyyy-MM-dd 'at' HH.mm.ss.SSS"
         return f
     }()
 
-    private func report(_ message: String, detail text: String?) {
+    private func report(_ message: String) {
         status.stringValue = message
-        detail.stringValue = text ?? ""
     }
 
     private func buildMenu() {
