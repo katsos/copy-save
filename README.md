@@ -6,8 +6,6 @@
 
 One click, from any app. No window, no dialog, no keyboard shortcut to learn.
 
-<!-- Add a demo GIF here: copy a screenshot, click the icon, file appears. -->
-
 | Getting a copied image onto disk | Steps |
 | --- | --- |
 | Preview: File → New from Clipboard, ⌘S, name it, pick a folder, pick a format, Save | 6 |
