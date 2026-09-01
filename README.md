@@ -2,8 +2,7 @@
 
 **Copy an image. Click the menu bar icon. It's a PNG on your Desktop.**
 
-One click, from any app, with no window to open or focus. Every other way of
-doing this on macOS costs three to six steps.
+One click, from any app. No window, no dialog, no keyboard shortcut to learn.
 
 <!-- Add a demo GIF here: copy a screenshot, click the icon, file appears. -->
 
@@ -14,14 +13,14 @@ doing this on macOS costs three to six steps.
 | Paste into Finder (macOS 14+): open a Finder window, focus it, ⌘V | 3 |
 | **Copy Save** | **1** |
 
-No Save dialog. No "where do you want this?". No format picker. No
-preferences, no accounts, no login item to configure. It sits in the menu bar
-as a single icon so you can see it's ready — about 195 lines of Swift and zero
-dependencies.
+Copy Save has no window and no preferences, because there is nothing to
+configure. It is one icon in the menu bar: click it, and whatever image is on
+your clipboard becomes a timestamped PNG on your Desktop. The icon flashes a
+checkmark to confirm.
 
-No global hotkey, which means **no Accessibility or Input Monitoring
-permission** — no prompt, nothing to grant, and nothing in Copy Save that can
-observe a keystroke you didn't aim at it.
+95 lines of Swift. Zero dependencies. No global hotkey, so **no Accessibility
+or Input Monitoring permission** — no prompt, nothing to grant, and nothing in
+Copy Save that could observe a keystroke.
 
 ## Install
 
@@ -39,20 +38,15 @@ That produces an ad-hoc signed `CopySave.app` next to the script. Move it to
 ln -s "$PWD/CopySave.app" /Applications/CopySave.app
 ```
 
-A symlinked app generally isn't indexed by Spotlight. Launch it from Finder or
-keep it in the Dock, which stores the resolved path and survives rebuilds.
+To have it there every time you log in, add it under System Settings → General
+→ Login Items.
 
 ## Use
 
 Copy an image anywhere — a screenshot, a browser, Slack, Figma — then click the
-Copy Save icon in the menu bar. The icon flashes a checkmark and the PNG is on
-your Desktop.
+Copy Save icon in the menu bar.
 
-Right-click or control-click the icon for the menu: Save Clipboard Image, Show
-Window, Quit.
-
-The window is optional. It shows what was saved last, accepts ⌘V, and takes
-images dragged onto it.
+Right-click or control-click the icon for the menu: Save Clipboard Image, Quit.
 
 Files land on the Desktop as `Clipboard 2026-08-31 at 12.42.21.783.png`. The
 millisecond stamp means nothing is ever overwritten.
@@ -61,9 +55,10 @@ millisecond stamp means nothing is ever overwritten.
 
 - The app is signed ad-hoc, so the first launch needs right-click → Open.
 - macOS asks once for permission to write to the Desktop folder.
-- Copy Save lives in the menu bar and has no Dock icon. Quit it from the icon's
-  menu, or press ⌘Q with its window focused.
+- There is no Dock icon and no window. Quit from the icon's menu.
 - Everything is re-encoded to PNG, including pasted JPEGs.
+- If there is no image on the clipboard, or the save fails, you get an alert
+  saying why.
 
 ## License
 
