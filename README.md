@@ -13,14 +13,13 @@ One click, from any app. No window, no dialog, no keyboard shortcut to learn.
 | Paste into Finder (macOS 14+): open a Finder window, focus it, ⌘V | 3 |
 | **Copy Save** | **1** |
 
-Copy Save has no window and no preferences, because there is nothing to
-configure. It is one icon in the menu bar: click it, and whatever image is on
-your clipboard becomes a timestamped PNG on your Desktop. The icon flashes a
+Copy Save is one icon in the menu bar: click it, and whatever image is on your
+clipboard becomes a timestamped file in your save folder. The icon flashes a
 checkmark to confirm.
 
-95 lines of Swift. Zero dependencies. No global hotkey, so **no Accessibility
-or Input Monitoring permission** — no prompt, nothing to grant, and nothing in
-Copy Save that could observe a keystroke.
+Zero dependencies, and **no Accessibility or Input Monitoring permission** —
+even the optional keyboard shortcut goes through Carbon's `RegisterEventHotKey`,
+which needs no prompt and cannot observe a keystroke you didn't aim at it.
 
 ## Install
 
@@ -46,16 +45,33 @@ To have it there every time you log in, add it under System Settings → General
 Copy an image anywhere — a screenshot, a browser, Slack, Figma — then click the
 Copy Save icon in the menu bar.
 
-Right-click or control-click the icon for the menu: Save Clipboard Image, Quit.
+Right-click or control-click the icon for Settings and Quit.
 
-Files land on the Desktop as `Clipboard 2026-08-31 at 12.42.21.783.png`. The
-millisecond stamp means nothing is ever overwritten.
+Files are named `Clipboard 2026-08-31 at 12.42.21.783.png`. The millisecond
+stamp means nothing is ever overwritten.
+
+## Settings
+
+Right-click the menu bar icon → Settings.
+
+- **Shortcut** — optional. Click the field, press a combination, and it saves
+  from any app without touching the mouse. Needs at least one of ⌘, ⌥ or ⌃ so
+  it can't swallow ordinary typing. Clear removes it.
+- **Save to** — any folder. Defaults to the Desktop.
+- **Format** — PNG, HEIC or WebP.
+
+PNG and HEIC are encoded by macOS itself. macOS can read WebP but cannot write
+it, so that option needs Homebrew's encoder and is greyed out until you have it:
+
+```sh
+brew install webp
+```
 
 ## Notes
 
 - The app is signed ad-hoc, so the first launch needs right-click → Open.
 - macOS asks once for permission to write to the Desktop folder.
-- There is no Dock icon and no window. Quit from the icon's menu.
+- There is no Dock icon. Quit from the icon's menu.
 - Everything is re-encoded to PNG, including pasted JPEGs.
 - If there is no image on the clipboard, or the save fails, you get an alert
   saying why.
