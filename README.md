@@ -23,15 +23,25 @@ which needs no prompt and cannot observe a keystroke you didn't aim at it.
 
 ## Install
 
-Requires macOS 13 or later and the Swift toolchain from Xcode or the Command
-Line Tools (`xcode-select --install`).
+Requires macOS 13 or later.
+
+Download [`CopySave-1.0.zip`](https://github.com/katsos/copy-save/releases/latest)
+from the latest release, unzip it, and move `CopySave.app` to `/Applications`.
+It is a universal binary, so it runs on Apple silicon and Intel alike. The app
+is signed ad-hoc rather than notarized, so the **first** launch needs
+right-click → Open.
+
+### Or build it yourself
+
+Needs the Swift toolchain from Xcode or the Command Line Tools
+(`xcode-select --install`).
 
 ```sh
 git clone https://github.com/katsos/copy-save.git && cd copy-save && ./build.sh
 ```
 
-That produces an ad-hoc signed `CopySave.app` next to the script. Move it to
-`/Applications`, or symlink it so rebuilds are picked up automatically:
+That produces the same ad-hoc signed `CopySave.app` next to the script. Move it
+to `/Applications`, or symlink it so rebuilds are picked up automatically:
 
 ```sh
 ln -s "$PWD/CopySave.app" /Applications/CopySave.app
