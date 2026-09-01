@@ -1,5 +1,7 @@
 # Copy Save
 
+[![build](https://github.com/katsos/copy-save/actions/workflows/build.yml/badge.svg)](https://github.com/katsos/copy-save/actions/workflows/build.yml)
+
 **Copy an image. Click the menu bar icon. It's a PNG on your Desktop.**
 
 One click, from any app. No window, no dialog, no keyboard shortcut to learn.
@@ -69,6 +71,16 @@ Right-click the menu bar icon → Settings.
 - Everything is re-encoded to PNG, including pasted JPEGs.
 - If there is no image on the clipboard, or the save fails, you get an alert
   saying why.
+
+## Development
+
+```sh
+./tests/run.sh   # encoding and file naming
+./build.sh       # produces CopySave.app
+```
+
+`src/Encoder.swift` holds the part that can be tested without a menu bar;
+`src/main.swift` is the status item, the settings window and the shortcut.
 
 ## License
 

@@ -5,9 +5,10 @@ cd "$(dirname "$0")"
 
 APP="CopySave.app"
 rm -rf "$APP"
-mkdir -p "$APP/Contents/MacOS"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+cp Resources/AppIcon.icns "$APP/Contents/Resources/"
 
-swiftc src/main.swift -o "$APP/Contents/MacOS/CopySave" \
+swiftc src/*.swift -o "$APP/Contents/MacOS/CopySave" \
   -target "$(uname -m)-apple-macosx13.0"
 
 cat > "$APP/Contents/Info.plist" <<'PLIST'
@@ -18,7 +19,8 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <key>CFBundleName</key><string>Copy Save</string>
   <key>CFBundleDisplayName</key><string>Copy Save</string>
   <key>CFBundleExecutable</key><string>CopySave</string>
-  <key>CFBundleIdentifier</key><string>local.copysave</string>
+  <key>CFBundleIconFile</key><string>AppIcon</string>
+  <key>CFBundleIdentifier</key><string>com.github.katsos.copysave</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>1.0</string>
   <key>CFBundleVersion</key><string>1</string>
