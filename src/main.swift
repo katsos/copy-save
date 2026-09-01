@@ -5,24 +5,16 @@ import UniformTypeIdentifiers
 
 // MARK: - Output format
 
+/// Both are encoded by macOS itself, so the app needs nothing installed.
 enum Format: String, CaseIterable {
-    case png, webp, heic
+    case png, heic
 
     var label: String {
         switch self {
         case .png: return "PNG"
-        case .webp: return "WebP"
         case .heic: return "HEIC"
         }
     }
-
-    /// macOS can encode PNG and HEIC on its own. It decodes WebP but cannot
-    /// write it, so that one needs Homebrew's cwebp.
-    var isAvailable: Bool { self != .webp || Format.cwebp != nil }
-
-    static let cwebp = ["/opt/homebrew/bin/cwebp", "/usr/local/bin/cwebp"]
-        .first { FileManager.default.isExecutableFile(atPath: $0) }
-        .map { URL(fileURLWithPath: $0) }
 }
 
 // MARK: - Preferences
@@ -39,10 +31,7 @@ enum Prefs {
     }
 
     static var format: Format {
-        get {
-            let stored = Format(rawValue: defaults.string(forKey: "format") ?? "") ?? .png
-            return stored.isAvailable ? stored : .png
-        }
+        get { Format(rawValue: defaults.string(forKey: "format") ?? "") ?? .png }
         set { defaults.set(newValue.rawValue, forKey: "format") }
     }
 
@@ -178,17 +167,13 @@ final class SettingsWindow: NSWindowController {
 
         for format in Format.allCases {
             let item = NSMenuItem(title: format.label, action: nil, keyEquivalent: "")
-            item.isEnabled = format.isAvailable
             item.representedObject = format
             formats.menu?.addItem(item)
         }
         formats.target = self
         formats.action = #selector(chooseFormat)
-        formats.autoenablesItems = false
 
-        let note = NSTextField(labelWithString: Format.cwebp == nil
-            ? "WebP needs Homebrew's cwebp: brew install webp"
-            : "WebP is encoded with \(Format.cwebp!.path).")
+        let note = NSTextField(labelWithString: "HEIC files are much smaller; PNG opens anywhere.")
         note.font = .systemFont(ofSize: 11)
         note.textColor = .secondaryLabelColor
 
@@ -321,13 +306,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private static func encode(_ image: NSImage, as format: Format) throws -> Data {
         guard let tiff = image.tiffRepresentation,
-              let rep = NSBitmapImageRep(data: tiff),
-              let png = rep.representation(using: .png, properties: [:]) else {
+              let rep = NSBitmapImageRep(data: tiff) else {
             throw EncodeError.unreadable
         }
 
         switch format {
         case .png:
+            guard let png = rep.representation(using: .png, properties: [:]) else {
+                throw EncodeError.unreadable
+            }
             return png
         case .heic:
             guard let cgImage = rep.cgImage else { throw EncodeError.unreadable }
@@ -342,25 +329,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 throw EncodeError.encoder("HEIC encoding failed.")
             }
             return data as Data
-        case .webp:
-            guard let cwebp = Format.cwebp else {
-                throw EncodeError.encoder("WebP needs Homebrew's cwebp: brew install webp")
-            }
-            let process = Process()
-            process.executableURL = cwebp
-            process.arguments = ["-quiet", "-q", "85", "-o", "-", "--", "-"]
-            let input = Pipe(), output = Pipe()
-            process.standardInput = input
-            process.standardOutput = output
-            try process.run()
-            input.fileHandleForWriting.write(png)
-            input.fileHandleForWriting.closeFile()
-            let data = output.fileHandleForReading.readDataToEndOfFile()
-            process.waitUntilExit()
-            guard process.terminationStatus == 0, !data.isEmpty else {
-                throw EncodeError.encoder("cwebp failed with status \(process.terminationStatus).")
-            }
-            return data
         }
     }
 

@@ -58,14 +58,8 @@ Right-click the menu bar icon → Settings.
   from any app without touching the mouse. Needs at least one of ⌘, ⌥ or ⌃ so
   it can't swallow ordinary typing. Clear removes it.
 - **Save to** — any folder. Defaults to the Desktop.
-- **Format** — PNG, HEIC or WebP.
-
-PNG and HEIC are encoded by macOS itself. macOS can read WebP but cannot write
-it, so that option needs Homebrew's encoder and is greyed out until you have it:
-
-```sh
-brew install webp
-```
+- **Format** — PNG or HEIC. Both are encoded by macOS itself, so there is
+  nothing to install: HEIC files are much smaller, PNG opens anywhere.
 
 ## Notes
 
