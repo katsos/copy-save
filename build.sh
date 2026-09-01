@@ -8,8 +8,14 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp Resources/AppIcon.icns "$APP/Contents/Resources/"
 
-swiftc src/*.swift -o "$APP/Contents/MacOS/CopySave" \
-  -target "$(uname -m)-apple-macosx13.0"
+# Universal, so one download runs on both Apple silicon and Intel.
+for arch in arm64 x86_64; do
+  swiftc src/*.swift -o "$APP/Contents/MacOS/CopySave-$arch" \
+    -target "$arch-apple-macosx13.0"
+done
+lipo -create -output "$APP/Contents/MacOS/CopySave" \
+  "$APP/Contents/MacOS/CopySave-arm64" "$APP/Contents/MacOS/CopySave-x86_64"
+rm "$APP/Contents/MacOS/CopySave-arm64" "$APP/Contents/MacOS/CopySave-x86_64"
 
 cat > "$APP/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>

@@ -63,6 +63,7 @@ Right-click the menu bar icon → Settings.
 
 ## Notes
 
+- Downloads and local builds are universal binaries — Apple silicon and Intel.
 - The app is signed ad-hoc, so the first launch needs right-click → Open.
 - macOS asks once for permission to write to the Desktop folder.
 - There is no Dock icon. Quit from the icon's menu.
@@ -74,7 +75,7 @@ Right-click the menu bar icon → Settings.
 
 ```sh
 ./tests/run.sh   # encoding and file naming
-./build.sh       # produces CopySave.app
+./build.sh       # produces a universal CopySave.app
 ```
 
 `src/Encoder.swift` holds the part that can be tested without a menu bar;
